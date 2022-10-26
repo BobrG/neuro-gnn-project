@@ -3,6 +3,8 @@
 </p>
 
 
+**[Original code](https://github.com/HennyJie/IBGNN)**
+
 This is the official implementation for the accepted MICCAI 2022 (Oral) paper [Interpretable Graph Neural Networks for Connectome-Based Brain Disorder Analysis](https://arxiv.org/abs/2207.00813). This framework consists of two modules: a brain network-oriented backbone prediction model and a globally shared explanation generator that can highlight disorder-specific biomarkers including salient Regions of Interest (ROIs) and important connections. The whole implementation is built upon [PyTorch](https://pytorch.org) and [PyTorch Geometric](https://pytorch-geometric.readthedocs.io/en/latest/).
 
 ---
