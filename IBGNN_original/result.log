@@ -1,0 +1,82 @@
+['main_explainer.py', '--dataset_path=/home/neuro-gnn-project/datasets', '--dataset_name=Schiza', '--explain']
+(K Fold Initial)| avg_acc=61.18 +-  5.30, avg_auc=64.04 +- 5.59, avg_macro=60.12 +- 5.28
+(K Fold Tuning) | avg_acc=63.82 +-  10.72, avg_auc=67.10 +- 9.96avg_macro=63.38 +- 10.75
+['main_explainer.py', '--k_fold_splits=3', '--dataset_path=/home/neuro-gnn-project/datasets', '--dataset_name=Schiza', '--explain']
+(K Fold Initial)| avg_acc=59.29 +-  10.34, avg_auc=60.47 +- 10.67, avg_macro=58.77 +- 10.39
+(K Fold Tuning) | avg_acc=61.23 +-  8.65, avg_auc=65.58 +- 11.96avg_macro=60.30 +- 8.16
+['main_explainer.py', '--k_fold_splits=5', '--dataset_path=/home/neuro-gnn-project/datasets', '--dataset_name=Schiza', '--explain']
+(K Fold Initial)| avg_acc=64.68 +-  5.39, avg_auc=66.52 +- 5.30, avg_macro=63.91 +- 5.65
+(K Fold Tuning) | avg_acc=67.72 +-  3.56, avg_auc=71.08 +- 2.99avg_macro=67.63 +- 3.49
+['main_explainer.py', '--k_fold_splits=10', '--dataset_path=/home/neuro-gnn-project/datasets', '--dataset_name=Schiza', '--explain']
+(K Fold Initial)| avg_acc=61.69 +-  10.11, avg_auc=65.21 +- 13.82, avg_macro=60.31 +- 10.09
+(K Fold Tuning) | avg_acc=62.38 +-  10.65, avg_auc=64.89 +- 14.24avg_macro=61.62 +- 10.74
+['main_explainer.py', '--k_fold_splits=2', '--dataset_path=/home/neuro-gnn-project/datasets', '--dataset_name=Schiza', '--explain']
+(K Fold Initial)| avg_acc=nan +-  nan, avg_auc=nan +- nan, avg_macro=nan +- nan
+(K Fold Tuning) | avg_acc=nan +-  nan, avg_auc=nan +- nanavg_macro=nan +- nan
+['main_explainer.py', '--k_fold_splits=3', '--dataset_path=/home/neuro-gnn-project/datasets', '--dataset_name=Schiza', '--explain']
+(K Fold Initial)| avg_acc=nan +-  nan, avg_auc=nan +- nan, avg_macro=nan +- nan
+(K Fold Tuning) | avg_acc=nan +-  nan, avg_auc=nan +- nanavg_macro=nan +- nan
+['main_explainer.py', '--k_fold_splits=3', '--dataset_path=/home/neuro-gnn-project/datasets', '--dataset_name=Schiza', '--explain']
+(K Fold Initial)| avg_acc=nan +-  nan, avg_auc=nan +- nan, avg_macro=nan +- nan
+(K Fold Tuning) | avg_acc=nan +-  nan, avg_auc=nan +- nanavg_macro=nan +- nan
+['main_explainer.py', '--k_fold_splits=3', '--dataset_path=/home/neuro-gnn-project/datasets', '--dataset_name=Schiza', '--explain']
+(K Fold Initial)| avg_acc=nan +-  nan, avg_auc=nan +- nan, avg_macro=nan +- nan
+(K Fold Tuning) | avg_acc=nan +-  nan, avg_auc=nan +- nanavg_macro=nan +- nan
+['main_explainer.py', '--k_fold_splits=3', '--dataset_path=/home/neuro-gnn-project/datasets', '--dataset_name=Schiza', '--explain']
+(K Fold Initial)| avg_acc=nan +-  nan, avg_auc=nan +- nan, avg_macro=nan +- nan
+(K Fold Tuning) | avg_acc=nan +-  nan, avg_auc=nan +- nanavg_macro=nan +- nan
+['main_explainer.py', '--k_fold_splits=3', '--dataset_path=/home/neuro-gnn-project/datasets', '--dataset_name=Schiza', '--explain']
+(K Fold Initial)| avg_acc=nan +-  nan, avg_auc=nan +- nan, avg_macro=nan +- nan
+(K Fold Tuning) | avg_acc=nan +-  nan, avg_auc=nan +- nanavg_macro=nan +- nan
+['main_explainer.py', '--k_fold_splits=3', '--dataset_path=/home/neuro-gnn-project/datasets', '--dataset_name=Schiza', '--explain']
+(K Fold Initial)| avg_acc=nan +-  nan, avg_auc=nan +- nan, avg_macro=nan +- nan
+(K Fold Tuning) | avg_acc=nan +-  nan, avg_auc=nan +- nanavg_macro=nan +- nan
+['main_explainer.py', '--k_fold_splits=3', '--dataset_path=/home/neuro-gnn-project/datasets', '--dataset_name=Schiza', '--explain']
+(K Fold Initial)| avg_acc=nan +-  nan, avg_auc=nan +- nan, avg_macro=nan +- nan
+(K Fold Tuning) | avg_acc=nan +-  nan, avg_auc=nan +- nanavg_macro=nan +- nan
+['main_explainer.py', '--k_fold_splits=3', '--dataset_path=/home/neuro-gnn-project/datasets', '--dataset_name=Schiza', '--explain']
+(K Fold Initial)| avg_acc=nan +-  nan, avg_auc=nan +- nan, avg_macro=nan +- nan
+(K Fold Tuning) | avg_acc=nan +-  nan, avg_auc=nan +- nanavg_macro=nan +- nan
+['main_explainer.py', '--k_fold_splits=2', '--dataset_path=/home/neuro-gnn-project/datasets', '--dataset_name=Schiza', '--explain']
+(K Fold Initial)| avg_acc=nan +-  nan, avg_auc=nan +- nan, avg_macro=nan +- nan
+(K Fold Tuning) | avg_acc=nan +-  nan, avg_auc=nan +- nanavg_macro=nan +- nan
+['main_explainer.py', '--k_fold_splits=2', '--dataset_path=/home/neuro-gnn-project/datasets', '--dataset_name=Schiza', '--explain']
+(K Fold Initial)| avg_acc=nan +-  nan, avg_auc=nan +- nan, avg_macro=nan +- nan
+(K Fold Tuning) | avg_acc=nan +-  nan, avg_auc=nan +- nanavg_macro=nan +- nan
+['main_explainer.py', '--k_fold_splits=2', '--dataset_path=/home/neuro-gnn-project/datasets', '--dataset_name=Schiza', '--explain']
+(K Fold Initial)| avg_acc=nan +-  nan, avg_auc=nan +- nan, avg_macro=nan +- nan
+(K Fold Tuning) | avg_acc=nan +-  nan, avg_auc=nan +- nanavg_macro=nan +- nan
+['main_explainer.py', '--k_fold_splits=2', '--dataset_path=/home/neuro-gnn-project/datasets', '--dataset_name=Schiza', '--explain']
+(K Fold Initial)| avg_acc=nan +-  nan, avg_auc=nan +- nan, avg_macro=nan +- nan
+(K Fold Tuning) | avg_acc=nan +-  nan, avg_auc=nan +- nanavg_macro=nan +- nan
+['main_explainer.py', '--k_fold_splits=2', '--dataset_path=/home/neuro-gnn-project/datasets', '--dataset_name=Schiza', '--explain']
+(K Fold Initial)| avg_acc=nan +-  nan, avg_auc=nan +- nan, avg_macro=nan +- nan
+(K Fold Tuning) | avg_acc=nan +-  nan, avg_auc=nan +- nanavg_macro=nan +- nan
+['main_explainer.py', '--k_fold_splits=2', '--dataset_path=/home/neuro-gnn-project/datasets', '--dataset_name=Schiza', '--explain']
+(K Fold Initial)| avg_acc=nan +-  nan, avg_auc=nan +- nan, avg_macro=nan +- nan
+(K Fold Tuning) | avg_acc=nan +-  nan, avg_auc=nan +- nanavg_macro=nan +- nan
+['main_explainer.py', '--k_fold_splits=2', '--dataset_path=/home/neuro-gnn-project/datasets', '--dataset_name=Schiza', '--explain']
+(K Fold Initial)| avg_acc=nan +-  nan, avg_auc=nan +- nan, avg_macro=nan +- nan
+(K Fold Tuning) | avg_acc=nan +-  nan, avg_auc=nan +- nanavg_macro=nan +- nan
+['main_explainer.py', '--k_fold_splits=2', '--dataset_path=/home/neuro-gnn-project/datasets', '--dataset_name=Schiza', '--explain']
+(K Fold Initial)| avg_acc=nan +-  nan, avg_auc=nan +- nan, avg_macro=nan +- nan
+(K Fold Tuning) | avg_acc=nan +-  nan, avg_auc=nan +- nanavg_macro=nan +- nan
+['main_explainer.py', '--k_fold_splits=2', '--dataset_path=/home/neuro-gnn-project/datasets', '--dataset_name=Schiza', '--explain']
+(K Fold Initial)| avg_acc=nan +-  nan, avg_auc=nan +- nan, avg_macro=nan +- nan
+(K Fold Tuning) | avg_acc=nan +-  nan, avg_auc=nan +- nanavg_macro=nan +- nan
+['main_explainer.py', '--k_fold_splits=2', '--dataset_path=/home/neuro-gnn-project/datasets', '--dataset_name=Schiza', '--explain']
+(K Fold Initial)| avg_acc=nan +-  nan, avg_auc=nan +- nan, avg_macro=nan +- nan
+(K Fold Tuning) | avg_acc=nan +-  nan, avg_auc=nan +- nanavg_macro=nan +- nan
+['main_explainer.py', '--k_fold_splits=2', '--dataset_path=/home/neuro-gnn-project/datasets', '--dataset_name=Schiza', '--explain']
+(K Fold Initial)| avg_acc=nan +-  nan, avg_auc=nan +- nan, avg_macro=nan +- nan
+(K Fold Tuning) | avg_acc=nan +-  nan, avg_auc=nan +- nanavg_macro=nan +- nan
+['main_explainer.py', '--k_fold_splits=2', '--dataset_path=/home/neuro-gnn-project/datasets', '--dataset_name=Schiza', '--explain']
+(K Fold Initial)| avg_acc=nan +-  nan, avg_auc=nan +- nan, avg_macro=nan +- nan
+(K Fold Tuning) | avg_acc=nan +-  nan, avg_auc=nan +- nanavg_macro=nan +- nan
+['main_explainer.py', '--k_fold_splits=2', '--dataset_path=/home/neuro-gnn-project/datasets', '--dataset_name=Schiza', '--explain']
+(K Fold Initial)| avg_acc=nan +-  nan, avg_auc=nan +- nan, avg_macro=nan +- nan
+(K Fold Tuning) | avg_acc=nan +-  nan, avg_auc=nan +- nanavg_macro=nan +- nan
+['main_explainer.py', '--k_fold_splits=2', '--dataset_path=/home/neuro-gnn-project/datasets', '--dataset_name=Schiza', '--explain']
+(K Fold Initial)| avg_acc=nan +-  nan, avg_auc=nan +- nan, avg_macro=nan +- nan
+(K Fold Tuning) | avg_acc=nan +-  nan, avg_auc=nan +- nanavg_macro=nan +- nan
+['main_explainer.py', '--train', '--explain', '--save_explanation', '--dataset_path=/home/neuro-gnn-project/datasets', '--dataset_name=Schiza']
