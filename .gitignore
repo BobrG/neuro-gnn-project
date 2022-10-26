@@ -1,1 +1,5 @@
-/datasets/
+.ipynb_checkpoints/
+__pycache__/
+datasets/
+rois/
+IBGNN/fig
