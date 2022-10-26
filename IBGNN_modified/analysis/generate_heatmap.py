@@ -9,8 +9,8 @@ def take_system_name(elem):
 
 
 def generate_system_ordered_adj(dataset: str, adj: numpy.ndarray, community: bool = True) -> (numpy.ndarray, List[int]):
-    if 'schiza' in dataset.lower(): # dataset == dataset_name actually
-        return adj
+#     if 'schiza' in dataset.lower(): # dataset == dataset_name actually
+#         return adjs
     
     mapping, system_mapping = get_system_mapping(dataset)
 
@@ -25,8 +25,9 @@ def generate_system_ordered_adj(dataset: str, adj: numpy.ndarray, community: boo
 
 
 def get_divider_lines(dataset_name: str):
-    mapping, system_mapping = get_system_mapping(dataset_name) if 'schiza' not in dataset_name.lower() \
-                                else numpy.arange(0, 39), numpy.repeat(numpy.arange(39).reshape(-1, 1), 3, axis=1)
+#     mapping, system_mapping = get_system_mapping(dataset_name) if 'schiza' not in dataset_name.lower() \
+#                                 else numpy.arange(0, 39), numpy.repeat(numpy.arange(39).reshape(-1, 1), 3, axis=1)
+    mapping, system_mapping = get_system_mapping(dataset_name)
     # get divider lines
     divider_lines: List[int] = list()
     divider_lines.append(0)
@@ -45,7 +46,12 @@ def get_divider_lines(dataset_name: str):
 
 
 def get_system_mapping(dataset):
-    system_mapping: List[List[str]] = read_csv_to_list(f"datasets/{dataset}_Community.csv")
+    if 'schiza' in dataset.lower():
+        csv_file = f'/home/neuro-gnn-project/datasets/{dataset}_Community.csv'
+    else:
+        csv_file = f'datasets/{dataset}_Community.csv'
+        
+    system_mapping: List[List[str]] = read_csv_to_list(csv_file)
     system_mapping = system_mapping[1:]
     system_mapping.sort(key=take_system_name)
     # print(system_mapping)

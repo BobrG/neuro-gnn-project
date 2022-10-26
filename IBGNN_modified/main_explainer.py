@@ -280,6 +280,7 @@ class MainExplainer:
         parser.add_argument('--train', action='store_true')
         parser.add_argument('--cross_val', action='store_true')
         parser.add_argument('--save_explanation', action='store_true')
+        parser.add_argument('--threshold', type=int, default=300, help='threshold for shared explanation graph')
         parser.add_argument('--checkpoint_path', type=str)
 
         args = parser.parse_args()
@@ -310,10 +311,11 @@ class MainExplainer:
         if args.cross_val:
             self.run_cv(args, train_set, train_y, node_atts, node_labels)
             
-            
+        
         if args.train:
-            print('Training 80/20 \n')
             model = build_model(args, device, num_features)
+            print('Training 80/20 \n')
+            
             optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
 
             train_loader = DataLoader(train_set, batch_size=args.train_batch_size, shuffle=False)
@@ -326,6 +328,8 @@ class MainExplainer:
             
         if args.explain:
             if args.checkpoint_path is not None:
+                model = build_model(args, device, num_features)
+                optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
                 model.load_state_dict(torch.load(f'{args.checkpoint_path}/model.pt'))
             explainer_model, node_feat_mask, edge_mask, \
             msk_train_loader, msk_test_loader = self.explain(model, train_set,test_set, node_labels, node_atts, \
@@ -333,12 +337,17 @@ class MainExplainer:
                                                              return_loaders=args.save_explanation)
         
             if args.save_explanation:
-                idx = 0
                 np.save('./node_feat_mask', node_feat_mask.detach().cpu().numpy())
                 sz = int(np.sqrt(edge_mask.shape[0]))
-                np.save('./edge_mask', edge_mask.view(sz, sz).detach().cpu().numpy())
-                explainer_model.plot_explanations(msk_train_loader.dataset[idx], None, args.dataset_name, \
-                                                  node_feat_mask, node_atts, index=idx, seed=args.seed)
+                edge_mask = edge_mask.view(sz, sz).detach().cpu().numpy()
+                np.save('./edge_mask', edge_mask)
+                
+                edges_thresholded = explainer_model.denoise_graph(edge_mask, 0, threshold_num=args.threshold)
+                np.savetxt(f"./fig/explainer_{args.dataset_name}_seed{args.seed}_thresh{args.threshold}_sharedmask.edge", \
+                           edges_thresholded, delimiter='\t')
+#                 idx = 0
+#                 explainer_model.plot_explanations(msk_train_loader.dataset[idx], None, args.dataset_name, \
+#                                                   node_feat_mask, node_atts, index=idx, seed=args.seed)
         
 
 def count_degree(data: numpy.ndarray):  # data: (sample, node, node)

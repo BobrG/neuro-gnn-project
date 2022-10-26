@@ -200,7 +200,8 @@ def load_data_singleview(args, path, modality: str, node_labels, dataset_name=No
         a1_transformed = tl.tucker_to_tensor((core, factors))
         a1 = torch.from_numpy(a1_transformed)
 
-    bin_edges, data_list = build_dataset(a1, y, args=args) if args is not None else build_dataset(a1, y, node_features, dataset_name, modality)
+    bin_edges, data_list = build_dataset(a1, y, args=args) if args is not None \
+                            else build_dataset(a1, y, node_features, dataset_name, modality)
 
     return data_list, bin_edges, y
 
@@ -212,6 +213,8 @@ def build_dataset(a1, y, node_features=None, dataset_name=None, modality=None, a
     for i in range(a1.shape[0]):
         edge_index, edge_attr = dense_to_sparse(a1[i])
         edge_flag = generate_edge_flag(x1.shape[1], edge_index)
+#         print('idx {} attr {} x1 {} y {} edge_flag {}'.format(edge_index, edge_attr, x1[i], y[i], edge_flag))
+        
         data = Data(x=x1[i], edge_index=edge_index, edge_attr=edge_attr, y=y[i], adj=a1[i], edge_flag=edge_flag)
         data_list.append(data)
         single_graph_edge_weights = [weight for weight in edge_attr.numpy()]

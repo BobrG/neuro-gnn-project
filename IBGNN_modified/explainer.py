@@ -249,7 +249,7 @@ class GNNExplainer(torch.nn.Module):
 
         return masked_loader
 
-    def plot_explanations(self, data, filtered_edges, dataset_name, node_feat_mask, node_atts, index=0, seed=42):
+    def plot_explanations(self, data, filtered_edges, dataset_name, node_feat_mask, node_atts, name='0', seed=42):
         positivity = 'positive' if data.y.item() == 1 else 'negative'
         num_nodes = data.x.shape[0]
         figure(figsize=(8, 6), dpi=300)
@@ -265,12 +265,12 @@ class GNNExplainer(torch.nn.Module):
         print(f"Filtered Nonzero: {numpy.count_nonzero(edges)}, Full nonzero: {numpy.count_nonzero(unfiltered_edges)}")
         mkdir_if_needed('result')
         save_edges_to_mat(unfiltered_edges,
-                          f"./fig/explainer_{dataset_name}_seed{seed}_full_{positivity}_{index}.mat")
-        plot_heatmap(edges, dataset_name, f"explained_{dataset_name}_seed{seed}_{positivity}_{index}")
+                          f"./fig/explainer_{dataset_name}_seed{seed}_full_{positivity}_{name}.mat")
+        plot_heatmap(edges, dataset_name, f"explained_{dataset_name}_seed{seed}_{positivity}_{name}")
 
         # save node/edge
-        numpy.savetxt(f"./fig/explainer_{dataset_name}_seed{seed}_{positivity}_{index}.edge", edges, delimiter='\t')
-        save_edges_to_mat(edges, f"./fig/explainer_{dataset_name}_seed{seed}_filtered_{positivity}_{index}.mat")
+        numpy.savetxt(f"./fig/explainer_{dataset_name}_seed{seed}_{positivity}_{name}.edge", edges, delimiter='\t')
+        save_edges_to_mat(edges, f"./fig/explainer_{dataset_name}_seed{seed}_filtered_{positivity}_{name}.mat")
 
     def visualize_graph(self, edge_index, edge_attr: Optional[Tensor],
                         node_atts: Optional[List[List[Union[float, str]]]], x=None,
