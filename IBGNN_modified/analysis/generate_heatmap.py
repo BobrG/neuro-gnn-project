@@ -14,7 +14,7 @@ def generate_system_ordered_adj(dataset: str, adj: numpy.ndarray, community: boo
     
     mapping, system_mapping = get_system_mapping(dataset)
 
-    # print(mapping)
+#     print(mapping)
 
     new_adj = numpy.zeros(adj.shape)
     for i in range(adj.shape[0]):

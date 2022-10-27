@@ -100,6 +100,7 @@ class MainExplainer:
         fpr, tpr, _ = metrics.roc_curve(trues, preds_prob)
         train_auc = metrics.auc(fpr, tpr)
         if numpy.isnan(train_auc):
+            print('NaNs in train auc')
             train_auc = 0.5
         train_micro = f1_score(trues, preds, average='micro')
         train_macro = f1_score(trues, preds, average='macro', labels=[0, 1])
@@ -234,7 +235,7 @@ class MainExplainer:
         parser.add_argument('--n_GNN_layers', type=int, default=2)
         parser.add_argument('--n_MLP_layers', type=int, default=1)
         parser.add_argument('--lr', type=float, default=0.001)
-        parser.add_argument('--num_heads', type=int, default=1)
+#         parser.add_argument('--num_heads', type=int, default=1)
         parser.add_argument('--weight_decay', type=float, default=1e-5)
         parser.add_argument('--initial_epochs', type=int, default=100)
         parser.add_argument('--explainer_epochs', type=int, default=100)
@@ -255,7 +256,7 @@ class MainExplainer:
         parser.add_argument('--train_batch_size', type=int, default=16)
         parser.add_argument('--test_batch_size', type=int, default=16)
         parser.add_argument('--k_fold_splits', type=int, default=7)
-        parser.add_argument('--gat_hidden_dim', type=int, default=8)
+#         parser.add_argument('--gat_hidden_dim', type=int, default=8)
         parser.add_argument('--enable_nni', action='store_true')
         parser.add_argument('--dropout', type=float, default=0.5)
         parser.add_argument('--edge_emb_dim', type=int, default=1)
@@ -298,7 +299,6 @@ class MainExplainer:
                                Schiza="/home/neuro-gnn-project/datasets/Schiza.txt")
         txt_name = dataset_mapping.get(args.dataset_name, None)
         node_labels = load_cluster_info_from_txt(txt_name)
-        print(node_labels, len(node_labels))
         dataset, _, y = load_data_singleview(args, args.dataset_path, args.modality, node_labels)
         train_set, test_set, train_y, test_y = train_test_split(dataset, y, test_size=0.2, \
                                                                 shuffle=False, random_state=args.seed)
@@ -345,9 +345,9 @@ class MainExplainer:
                 edges_thresholded = explainer_model.denoise_graph(edge_mask, 0, threshold_num=args.threshold)
                 np.savetxt(f"./fig/explainer_{args.dataset_name}_seed{args.seed}_thresh{args.threshold}_sharedmask.edge", \
                            edges_thresholded, delimiter='\t')
-#                 idx = 0
-#                 explainer_model.plot_explanations(msk_train_loader.dataset[idx], None, args.dataset_name, \
-#                                                   node_feat_mask, node_atts, index=idx, seed=args.seed)
+                for idx in [0, 1, 5, 6]:
+                    explainer_model.plot_explanations(msk_train_loader.dataset[idx], None, args.dataset_name, \
+                                                      node_feat_mask, node_atts, name=str(idx), seed=args.seed)
         
 
 def count_degree(data: numpy.ndarray):  # data: (sample, node, node)
@@ -357,4 +357,5 @@ def count_degree(data: numpy.ndarray):  # data: (sample, node, node)
 
 
 if __name__ == '__main__':
+    print(device)
     MainExplainer().main()

@@ -211,6 +211,8 @@ class GNNExplainer(torch.nn.Module):
             else:
                 community_label = generate_community_labels_for_edges(edge_index=full_edges,
                                                                       node_labels=self.node_labels)
+                import numpy
+                print(community_label, community_label.shape, numpy.unique(community_label))
 
             new_data = Data(x=data.x, edge_index=data.edge_index, full_edge_index=full_edges,
                             edge_attr=data.edge_attr, new_edge_attr=new_edge_attrs, edge_flag=data.edge_flag,
@@ -253,6 +255,7 @@ class GNNExplainer(torch.nn.Module):
         positivity = 'positive' if data.y.item() == 1 else 'negative'
         num_nodes = data.x.shape[0]
         figure(figsize=(8, 6), dpi=300)
+        numpy.savetxt(f'./fig/explainer_input_{name}_{positivity}.txt', data.x.detach().cpu().numpy())
         G, edges, unfiltered_edges = self.visualize_graph(data.edge_index,
                                                           data.edge_attr,
                                                           x=node_feat_mask,
