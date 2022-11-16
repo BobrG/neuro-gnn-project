@@ -24,9 +24,16 @@ from utils.modified_args import ModifiedArgs
 from utils.diff_matrix import DiffMatrix
 
 
+from comet_ml import Experiment
+# Create an experiment with your api key
+experiment = Experiment(
+    api_key='SKty3eCyCLDyXicElR2IoeZpi',
+    project_name='neuroml-gnn-project'
+)
+
+
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-###TODO: Add Comet ###
 
 class MainExplainer:
     def __init__(self):
@@ -56,7 +63,8 @@ class MainExplainer:
             print(f'({title}) | Epoch={i:03d}, loss={epoch_loss:.4f}, \n'
                   f'train_micro={(train_micro * 100):.2f}, train_macro={(train_macro * 100):.2f}, '
                   f'train_auc={(train_auc * 100):.2f}')
-
+            experiment.log_metric(f'{title} AUC', (train_auc * 100), step=i)
+            experiment.log_metric(f'{title} Loss', (epoch_loss), step=i)
             if (i + 1) % args.test_interval == 0 and test_loader is not None:
                 test_micro, test_auc, test_macro = self.eval(model, test_loader)
                 accs.append(test_micro)
@@ -67,6 +75,7 @@ class MainExplainer:
                 print(text)
                 with open(args.save_result, "a") as f:
                     f.writelines(text)
+                experiment.log_metric(f'{title.split(" ")[0]} Test AUC', (test_auc * 100), step=i)
 
             if args.enable_nni:
                 nni.report_intermediate_result(train_auc)
@@ -136,6 +145,7 @@ class MainExplainer:
             print(f'(Tuning Performance Last Epoch) | explainer_test_micro={(explainer_test_micro * 100):.2f}, '
                   f'explainer_test_macro={(explainer_test_macro * 100):.2f}, '
                   f'explainer_test_auc={(explainer_test_auc * 100):.2f}')
+#             experiment.log_metric('Tunning Test AUC', (explainer_test_auc * 100), step=args.tuning_epochs)
             
         if not return_explainer:
             return explainer_test_micro, explainer_test_auc, explainer_test_macro
@@ -291,6 +301,23 @@ class MainExplainer:
         if os.path.exists(args.save_result):
             os.remove(args.save_result)
 
+        # Report multiple hyperparameters using a dictionary:
+        hyper_params = {
+            'learning_rate': args.lr,
+            'initial_epochs': args.initial_epochs,
+            'explainer_epochs': args.explainer_epochs,
+            'tuning_epochs': args.tuning_epochs,
+            'train_batch_size': args.train_batch_size,
+            'test_batch_size': args.test_batch_size,
+            'dropout': args.dropout,
+            'hidden_dim': args.hidden_dim,
+            'n_GNN_layers': args.n_GNN_layers,
+            'n_MLP_layers': args.n_MLP_layers
+        }
+        experiment.log_parameters(hyper_params)
+
+            
+            
         # load datasets
         dataset_mapping = dict(HIV="datasets/New_Node_AAL90.txt",
                                BP="datasets/New_Node_Brodmann82.txt",

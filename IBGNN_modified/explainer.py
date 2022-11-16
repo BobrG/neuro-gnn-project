@@ -13,6 +13,15 @@ from analysis.generate_heatmap import generate_system_ordered_adj, plot_heatmap
 from matplotlib.pyplot import figure
 import torch.nn.functional as F
 
+
+from comet_ml import Experiment
+# Create an experiment with your api key
+experiment = Experiment(
+    api_key='SKty3eCyCLDyXicElR2IoeZpi',
+    project_name='neuroml-gnn-project'
+)
+
+
 EPS = 1e-15
 
 
@@ -156,6 +165,7 @@ class GNNExplainer(torch.nn.Module):
 
         data: Data
         for epoch in range(1, self.epochs + 1):
+            loss_all = 0
             for data in explainer_train_loader:
                 data = data.to(device)
                 optimizer.zero_grad()
@@ -169,9 +179,14 @@ class GNNExplainer(torch.nn.Module):
                 loss = self.__graphloss__(out, pred_label=data.pred, y=data.y)
                 loss.sum().backward()
                 optimizer.step()
-
+                
+                loss_all += loss.sum().item()
+            epoch_loss = loss_all / len(explainer_train_loader.dataset)
+            print('Explainer Train | loss=',epoch_loss)
             if self.log:  # pragma: no cover
                 pbar.update(1)
+                
+            experiment.log_metric(f'Explainer loss', epoch_loss, step=epoch)
 
         print(f"(Explainer Train) | Epoch={epoch:03d}, loss={loss.item():.4f}")
 
@@ -211,8 +226,6 @@ class GNNExplainer(torch.nn.Module):
             else:
                 community_label = generate_community_labels_for_edges(edge_index=full_edges,
                                                                       node_labels=self.node_labels)
-                import numpy
-                print(community_label, community_label.shape, numpy.unique(community_label))
 
             new_data = Data(x=data.x, edge_index=data.edge_index, full_edge_index=full_edges,
                             edge_attr=data.edge_attr, new_edge_attr=new_edge_attrs, edge_flag=data.edge_flag,
