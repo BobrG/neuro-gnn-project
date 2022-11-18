@@ -1,9 +1,26 @@
+# ibgnn
+numpy
+nni~=2.4
+nilearn
+PyYAML~=5.4.1
+scikit-learn~=1.0.2
+networkx~=2.6.2
+scipy~=1.7.3
+tensorly~=0.6.0
+pandas
+libsvm~=3.23.0.4
+matplotlib~=3.4.3
+tqdm~=4.62.3
+h5py~=3.6.0
+# other
 jupyter
+--extra-index-url https://download.pytorch.org/whl/cu116
 torch
 torchvision
-torch_geometric
-torch_sparse
-torch_scatter
+-f https://data.pyg.org/whl/torch-1.12.1+cu116.html
+torch-geometric
+torch-sparse
+torch-scatter
 ants
 saliency
 antspyx==0.3.1

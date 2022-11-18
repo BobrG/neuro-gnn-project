@@ -25,12 +25,8 @@ from utils.diff_matrix import DiffMatrix
 
 
 from comet_ml import Experiment
-# Create an experiment with your api key
-experiment = Experiment(
-    api_key='SKty3eCyCLDyXicElR2IoeZpi',
-    project_name='neuroml-gnn-project'
-)
-
+#TODO: fix all experiment calls for self.experiment
+experiment = None
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
@@ -93,7 +89,7 @@ class MainExplainer:
         return epoch_num
 
     @torch.no_grad()
-    def eval(self, model, loader, test_loader: Optional[DataLoader] = None) -> (float, float):
+    def eval(self, model, loader, test_loader: Optional[DataLoader] = None) # -> (float, float):
         model.eval()
         preds, trues, preds_prob = [], [], []
 
@@ -273,7 +269,7 @@ class MainExplainer:
         parser.add_argument('--no_vis', action='store_true')
         parser.add_argument('--top_k', type=int, default=0)
         parser.add_argument('--shallow', type=str, default='None')
-        parser.add_argument('--num_component', type=int, default=8)
+        # parser.add_argument('--num_component', type=int, default=8)
         parser.add_argument('--repeat', type=int, default=1)
         parser.add_argument('--rank', type=int, default=3)
         parser.add_argument('--rank_dim0', type=int, default=3)
@@ -285,7 +281,6 @@ class MainExplainer:
                             default='None')
         parser.add_argument('--interpolation', action='store_true')
         parser.add_argument('--gaussian', action='store_true')
-        parser.add_argument('--log_result', action='store_true')
         parser.add_argument('--use_partial', action='store_true')
         parser.add_argument('--dataset_path', type=str, default='dataset')
         parser.add_argument('--train', action='store_true')
@@ -293,8 +288,18 @@ class MainExplainer:
         parser.add_argument('--save_explanation', action='store_true')
         parser.add_argument('--threshold', type=int, default=300, help='threshold for shared explanation graph')
         parser.add_argument('--checkpoint_path', type=str)
+        parser.add_argument('--model_logger', default=None, help='whether to log a model or not')
+        parser.add_argument('--api_key', type=str, help='api key for comet_ml logger')
+        parser.add_argument('--project_name', type=str, help='project name for comet_ml logger')
 
         args = parser.parse_args()
+        
+        if args.model_logger is not None: #TODO: fix all experiment calls for self.experiment
+            self.experiment = Experiment(
+                api_key=args.api_key,
+                project_name=args.project_name
+            )
+        
         if args.enable_nni:
             args = ModifiedArgs(args, nni.get_next_parameter())
 
@@ -338,7 +343,6 @@ class MainExplainer:
         if args.cross_val:
             self.run_cv(args, train_set, train_y, node_atts, node_labels)
             
-        
         if args.train:
             model = build_model(args, device, num_features)
             print('Training 80/20 \n')
