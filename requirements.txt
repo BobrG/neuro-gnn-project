@@ -12,15 +12,16 @@ libsvm~=3.23.0.4
 matplotlib~=3.4.3
 tqdm~=4.62.3
 h5py~=3.6.0
-# other
-jupyter
 --extra-index-url https://download.pytorch.org/whl/cu116
-torch
-torchvision
+torch==1.12.1+cu116
+torchvision==0.13.1+cu116
+torchaudio==0.12.1
 -f https://data.pyg.org/whl/torch-1.12.1+cu116.html
 torch-geometric
 torch-sparse
 torch-scatter
+# other
+jupyter
 ants
 saliency
 antspyx==0.3.1
