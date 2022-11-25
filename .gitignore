@@ -4,4 +4,6 @@ IBGNN_modified/fig/
 __pycache__/
 datasets/
 rois/
+output/
 IBGNN/fig
+*.sif

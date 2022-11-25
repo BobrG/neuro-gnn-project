@@ -9,8 +9,8 @@ RUN apt-get update && \
 
 # install conda
 ENV CONDA_DIR /opt/conda
-RUN wget --quiet https://repo.anaconda.com/archive/Anaconda3-2022.10-Linux-x86_64.sh -O ~/miniconda.sh && \
-    /bin/bash ~/miniconda.sh -b -p /opt/conda
+RUN wget --quiet https://repo.anaconda.com/archive/Anaconda3-2022.10-Linux-x86_64.sh -O ~/conda.sh && \
+    /bin/bash ~/conda.sh -b -p /opt/conda
 ENV PATH=$CONDA_DIR/bin:$PATH
 
 # copy neuro project
@@ -20,6 +20,5 @@ WORKDIR /home/neuro-gnn-project
 # create enviroment
 RUN conda create --name neuro python=3.9
 RUN echo "source activate neuro" > ~/.bashrc
-ENV PATH /home/conda/conda3/envs/neuro/bin:$PATH
-RUN pip install -r requirements.txt
-
+ENV PATH $CONDA_DIR/conda3/envs/neuro/bin:$PATH
+RUN $CONDA_DIR/envs/neuro/bin/pip install -r requirements.txt
