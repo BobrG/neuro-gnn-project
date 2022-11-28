@@ -23,10 +23,7 @@ from utils.dataloader_utils import *
 from utils.modified_args import ModifiedArgs
 from utils.diff_matrix import DiffMatrix
 
-
 from comet_ml import Experiment
-#TODO: fix all experiment calls for self.experiment
-experiment = None
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
@@ -34,6 +31,7 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 class MainExplainer:
     def __init__(self):
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        self.experiment = None
 
     def train_and_evaluate(self, model, train_loader, test_loader, optimizer, device, args, is_tuning):
         model.train()
@@ -59,8 +57,8 @@ class MainExplainer:
             print(f'({title}) | Epoch={i:03d}, loss={epoch_loss:.4f}, \n'
                   f'train_micro={(train_micro * 100):.2f}, train_macro={(train_macro * 100):.2f}, '
                   f'train_auc={(train_auc * 100):.2f}')
-            experiment.log_metric(f'{title} AUC', (train_auc * 100), step=i)
-            experiment.log_metric(f'{title} Loss', (epoch_loss), step=i)
+            self.experiment.log_metric(f'{title} AUC', (train_auc * 100), step=i)
+            self.experiment.log_metric(f'{title} Loss', (epoch_loss), step=i)
             if (i + 1) % args.test_interval == 0 and test_loader is not None:
                 test_micro, test_auc, test_macro = self.eval(model, test_loader)
                 accs.append(test_micro)
@@ -71,7 +69,7 @@ class MainExplainer:
                 print(text)
                 with open(args.save_result, "a") as f:
                     f.writelines(text)
-                experiment.log_metric(f'{title.split(" ")[0]} Test AUC', (test_auc * 100), step=i)
+                self.experiment.log_metric(f'{title.split(" ")[0]} Test AUC', (test_auc * 100), step=i)
 
             if args.enable_nni:
                 nni.report_intermediate_result(train_auc)
@@ -89,7 +87,7 @@ class MainExplainer:
         return epoch_num
 
     @torch.no_grad()
-    def eval(self, model, loader, test_loader: Optional[DataLoader] = None) # -> (float, float):
+    def eval(self, model, loader, test_loader: Optional[DataLoader] = None): # -> (float, float):
         model.eval()
         preds, trues, preds_prob = [], [], []
 
@@ -288,7 +286,7 @@ class MainExplainer:
         parser.add_argument('--save_explanation', action='store_true')
         parser.add_argument('--threshold', type=int, default=300, help='threshold for shared explanation graph')
         parser.add_argument('--checkpoint_path', type=str)
-        parser.add_argument('--model_logger', default=None, help='whether to log a model or not')
+        parser.add_argument('--model_logger', action='store_true', help='whether to log a model or not')
         parser.add_argument('--api_key', type=str, help='api key for comet_ml logger')
         parser.add_argument('--project_name', type=str, help='project name for comet_ml logger')
 
@@ -319,7 +317,7 @@ class MainExplainer:
             'n_GNN_layers': args.n_GNN_layers,
             'n_MLP_layers': args.n_MLP_layers
         }
-        experiment.log_parameters(hyper_params)
+        self.experiment.log_parameters(hyper_params)
 
             
             
@@ -328,7 +326,7 @@ class MainExplainer:
                                BP="datasets/New_Node_Brodmann82.txt",
                                PPMI="datasets/New_Node_PPMI.txt",
                                PPMI_balanced="datasets/New_Node_PPMI.txt",
-                               Schiza="/home/neuro-gnn-project/datasets/Schiza.txt")
+                               Schiza="/home/src/datasets/Schiza.txt")
         txt_name = dataset_mapping.get(args.dataset_name, None)
         node_labels = load_cluster_info_from_txt(txt_name)
         dataset, _, y = load_data_singleview(args, args.dataset_path, args.modality, node_labels)
