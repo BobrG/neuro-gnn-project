@@ -53,12 +53,14 @@ class MainExplainer:
             epoch_loss = loss_all / len(train_loader.dataset)
 
             train_micro, train_auc, train_macro = self.eval(model, train_loader)
+            
             title = "Tuning Train" if is_tuning else "Initial Train"
             print(f'({title}) | Epoch={i:03d}, loss={epoch_loss:.4f}, \n'
                   f'train_micro={(train_micro * 100):.2f}, train_macro={(train_macro * 100):.2f}, '
                   f'train_auc={(train_auc * 100):.2f}')
-            self.experiment.log_metric(f'{title} AUC', (train_auc * 100), step=i)
-            self.experiment.log_metric(f'{title} Loss', (epoch_loss), step=i)
+            if self.experiment is not None:
+                self.experiment.log_metric(f'{title} AUC', (train_auc * 100), step=i)
+                self.experiment.log_metric(f'{title} Loss', (epoch_loss), step=i)
             if (i + 1) % args.test_interval == 0 and test_loader is not None:
                 test_micro, test_auc, test_macro = self.eval(model, test_loader)
                 accs.append(test_micro)
@@ -69,11 +71,13 @@ class MainExplainer:
                 print(text)
                 with open(args.save_result, "a") as f:
                     f.writelines(text)
-                self.experiment.log_metric(f'{title.split(" ")[0]} Test AUC', (test_auc * 100), step=i)
+                if self.experiment is not None:
+                    self.experiment.log_metric(f'{title.split(" ")[0]} Test AUC', (test_auc * 100), step=i)
 
             if args.enable_nni:
                 nni.report_intermediate_result(train_auc)
 
+        # sort <==> authors take results from the best epoch
         accs, aucs, macros = numpy.sort(numpy.array(accs)), numpy.sort(numpy.array(aucs)), \
                              numpy.sort(numpy.array(macros))
 
@@ -360,12 +364,13 @@ class MainExplainer:
                 model = build_model(args, device, num_features)
                 optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
                 model.load_state_dict(torch.load(f'{args.checkpoint_path}/model.pt'))
-            explainer_model, node_feat_mask, edge_mask, \
-            msk_train_loader, msk_test_loader = self.explain(model, train_set,test_set, node_labels, node_atts, \
-                                                             optimizer, device, args, return_explainer=True, \
-                                                             return_loaders=args.save_explanation)
         
             if args.save_explanation:
+                explainer_model, node_feat_mask, edge_mask, \
+                msk_train_loader, msk_test_loader = self.explain(model, train_set,test_set, node_labels, node_atts, \
+                                                             optimizer, device, args, return_explainer=True, \
+                                                             return_loaders=True)
+
                 np.save('./node_feat_mask', node_feat_mask.detach().cpu().numpy())
                 sz = int(np.sqrt(edge_mask.shape[0]))
                 edge_mask = edge_mask.view(sz, sz).detach().cpu().numpy()
