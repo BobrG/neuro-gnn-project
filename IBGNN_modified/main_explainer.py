@@ -75,7 +75,7 @@ class MainExplainer:
                     self.experiment.log_metric(f'{title.split(" ")[0]} Test AUC', (test_auc * 100), step=i)
 
             if args.enable_nni:
-                nni.report_intermediate_result(train_auc)
+                nni.report_intermediate_result(test_auc)
 
         # sort <==> authors take results from the best epoch
         accs, aucs, macros = numpy.sort(numpy.array(accs)), numpy.sort(numpy.array(aucs)), \
@@ -224,11 +224,11 @@ class MainExplainer:
                           f'avg_macro={(numpy.mean(exp_macros) * 100):.2f} +- {numpy.std(exp_macros) * 100:.2f}'
             print(result_str)
 
-        with open('result.log', 'a') as f:
-            # write all input arguments to f
-            input_arguments: List[str] = sys.argv
-            f.write(f'{input_arguments}\n')
-            f.write(result_str + '\n')
+        #with open('result.log', 'a') as f:
+        #    # write all input arguments to f
+        #    input_arguments: List[str] = sys.argv
+        #    f.write(f'{input_arguments}\n')
+        #    f.write(result_str + '\n')
 
         if args.enable_nni:
             nni.report_final_result(numpy.mean(aucs))
@@ -310,7 +310,7 @@ class MainExplainer:
 
         # Report multiple hyperparameters using a dictionary:
         hyper_params = {
-            'learning_rate': args.lr,
+            'lr': args.lr,
             'initial_epochs': args.initial_epochs,
             'explainer_epochs': args.explainer_epochs,
             'tuning_epochs': args.tuning_epochs,
@@ -343,6 +343,8 @@ class MainExplainer:
         seed_everything(args.seed)  # use random seed for each run
 
         if args.cross_val:
+            for key in hyper_params.keys():
+                print(key, getattr(args, key))
             self.run_cv(args, train_set, train_y, node_atts, node_labels)
             
         if args.train:
