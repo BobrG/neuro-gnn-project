@@ -1,6 +1,6 @@
 # ibgnn
 numpy
-nni~=2.4
+nni==2.4
 nilearn
 PyYAML~=5.4.1
 scikit-learn~=1.0.2
@@ -12,14 +12,13 @@ libsvm~=3.23.0.4
 matplotlib~=3.4.3
 tqdm~=4.62.3
 h5py~=3.6.0
---extra-index-url https://download.pytorch.org/whl/cu116
+extra-index-url=https://download.pytorch.org/whl/cu116
 torch==1.12.1+cu116
 torchvision==0.13.1+cu116
 torchaudio==0.12.1
--f https://data.pyg.org/whl/torch-1.12.1+cu116.html
-torch-geometric
-torch-sparse
-torch-scatter
+torch-geometric==2.1.0.post1
+torch-scatter==2.0.9
+torch-sparse==0.6.15
 # other
 jupyter
 ants
