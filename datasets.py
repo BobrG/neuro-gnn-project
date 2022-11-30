@@ -4,7 +4,7 @@ import pandas as pd
 import nibabel as nib
 from torch.utils.data import Dataset
 
-from utils import get_nii_path, ToTensor
+from tools import get_nii_path, ToTensor
 
 import logging
 
