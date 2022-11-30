@@ -74,8 +74,8 @@ class MainExplainer:
                 if self.experiment is not None:
                     self.experiment.log_metric(f'{title.split(" ")[0]} Test AUC', (test_auc * 100), step=i)
 
-            if args.enable_nni:
-                nni.report_intermediate_result(test_auc)
+                if args.enable_nni:
+                    nni.report_intermediate_result(test_auc)
 
         # sort <==> authors take results from the best epoch
         accs, aucs, macros = numpy.sort(numpy.array(accs)), numpy.sort(numpy.array(aucs)), \
@@ -301,7 +301,9 @@ class MainExplainer:
                 api_key=args.api_key,
                 project_name=args.project_name
             )
-        
+        else:
+            self.experiment = None
+
         if args.enable_nni:
             args = ModifiedArgs(args, nni.get_next_parameter())
 
@@ -321,7 +323,8 @@ class MainExplainer:
             'n_GNN_layers': args.n_GNN_layers,
             'n_MLP_layers': args.n_MLP_layers
         }
-        self.experiment.log_parameters(hyper_params)
+        if self.experiment is not None:
+            self.experiment.log_parameters(hyper_params)
 
             
             
