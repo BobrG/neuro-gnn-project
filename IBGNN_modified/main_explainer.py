@@ -74,8 +74,8 @@ class MainExplainer:
                 if self.experiment is not None:
                     self.experiment.log_metric(f'{title.split(" ")[0]} Test AUC', (test_auc * 100), step=i)
 
-                if args.enable_nni:
-                    nni.report_intermediate_result(test_auc)
+        if args.enable_nni:
+            nni.report_intermediate_result(accs[-1]) # report on test score after last training epoch
 
         # sort <==> authors take results from the best epoch
         accs, aucs, macros = numpy.sort(numpy.array(accs)), numpy.sort(numpy.array(aucs)), \
