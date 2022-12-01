@@ -296,7 +296,7 @@ class MainExplainer:
 
         args = parser.parse_args()
         
-        if args.model_logger is not None: #TODO: fix all experiment calls for self.experiment
+        if args.model_logger: #TODO: fix all experiment calls for self.experiment
             self.experiment = Experiment(
                 api_key=args.api_key,
                 project_name=args.project_name
