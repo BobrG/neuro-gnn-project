@@ -14,14 +14,6 @@ from matplotlib.pyplot import figure
 import torch.nn.functional as F
 
 
-from comet_ml import Experiment
-# Create an experiment with your api key
-experiment = Experiment(
-    api_key='SKty3eCyCLDyXicElR2IoeZpi',
-    project_name='neuroml-gnn-project'
-)
-
-
 EPS = 1e-15
 
 
@@ -141,7 +133,7 @@ class GNNExplainer(torch.nn.Module):
         divergence_loss = torch.sum(divergence_p * torch.log(torch.div(divergence_p, divergence_q)))
         return divergence_loss
 
-    def explainer_train(self, train_iterator: DataLoader, device, args):
+    def explainer_train(self, train_iterator: DataLoader, device, args, logger):
         # self.model.eval()
         num_nodes = next(iter(train_iterator)).adj.shape[0]
 
@@ -182,11 +174,11 @@ class GNNExplainer(torch.nn.Module):
                 
                 loss_all += loss.sum().item()
             epoch_loss = loss_all / len(explainer_train_loader.dataset)
-            print('Explainer Train | loss=',epoch_loss)
+            logger.info('Explainer Train | loss='+str(epoch_loss))
             if self.log:  # pragma: no cover
                 pbar.update(1)
                 
-            experiment.log_metric(f'Explainer loss', epoch_loss, step=epoch)
+            # experiment.log_metric(f'Explainer loss', epoch_loss, step=epoch)
 
         print(f"(Explainer Train) | Epoch={epoch:03d}, loss={loss.item():.4f}")
 
