@@ -190,10 +190,15 @@ class MainExplainer:
                     # per epoch
                     self.experiment.log_metric((f'{self.fold} Fold ' if self.cross_val else '') + f'{title.split(" ")[0]} Test AUC', (test_auc * 100), step=i, epoch=self.repeat)
 
+<<<<<<< HEAD
             if args.enable_nni:
                 nni.report_intermediate_result(aucs[-1])
                 
             pbar.update(1)
+=======
+        if args.enable_nni:
+            nni.report_intermediate_result(aucs[-1]) # report on test score after last training epoch
+>>>>>>> 589dfe9e8e16182ce9fea7b1a39027ab6ff429ce
 
         pbar.close()
 
@@ -409,9 +414,80 @@ class MainExplainer:
         if args.enable_nni:
             nni.report_final_result(numpy.mean(aucs))
     
+<<<<<<< HEAD
     def get_epoch_num(self, args, is_tuning):
         if is_tuning:
             epoch_num = args.tuning_epochs
+=======
+    def main(self):
+        mkdirs_if_needed(["fig/", "fig/archive/", "modularity/", "modularity/archive/"])
+        archive_files("fig/", "fig/archive/")
+        archive_files("modularity/", "modularity/archive/")
+
+        parser = argparse.ArgumentParser()
+        parser.add_argument('--hidden_dim', type=int, default=16)
+        parser.add_argument('--n_GNN_layers', type=int, default=2)
+        parser.add_argument('--n_MLP_layers', type=int, default=1)
+        parser.add_argument('--lr', type=float, default=0.001)
+#         parser.add_argument('--num_heads', type=int, default=1)
+        parser.add_argument('--weight_decay', type=float, default=1e-5)
+        parser.add_argument('--initial_epochs', type=int, default=100)
+        parser.add_argument('--explainer_epochs', type=int, default=100)
+        parser.add_argument('--tuning_epochs', type=int, default=100)
+        parser.add_argument('--test_interval', type=int, default=20)
+        parser.add_argument('--seed', type=int, default=112078)
+        parser.add_argument('--save_result', type=str, default='test')
+        parser.add_argument('--node_features', type=str,
+                            choices=['identity', 'LDP', 'node2vec', 'adj', 'diff_matrix'],
+                            # LDP is degree profile and adj is edge profile
+                            default='adj')
+        parser.add_argument('--pooling', type=str,
+                            choices=['sum', 'concat', 'mean'],
+                            default='sum')
+        parser.add_argument('--explain', action='store_true')
+        parser.add_argument('--modality', type=str, default='dti')
+        parser.add_argument('--dataset_name', type=str, default="BP")
+        parser.add_argument('--train_batch_size', type=int, default=16)
+        parser.add_argument('--test_batch_size', type=int, default=16)
+        parser.add_argument('--k_fold_splits', type=int, default=7)
+#         parser.add_argument('--gat_hidden_dim', type=int, default=8)
+        parser.add_argument('--enable_nni', action='store_true')
+        parser.add_argument('--dropout', type=float, default=0.5)
+        parser.add_argument('--edge_emb_dim', type=int, default=1)
+        parser.add_argument('--no_vis', action='store_true')
+        parser.add_argument('--top_k', type=int, default=0)
+        parser.add_argument('--shallow', type=str, default='None')
+        # parser.add_argument('--num_component', type=int, default=8)
+        parser.add_argument('--repeat', type=int, default=1)
+        parser.add_argument('--rank', type=int, default=3)
+        parser.add_argument('--rank_dim0', type=int, default=3)
+        parser.add_argument('--rank_dim1', type=int, default=4)
+        parser.add_argument('--rank_dim2', type=int, default=5)
+        parser.add_argument('--dropout_rate', type=float, default=0.0)
+        parser.add_argument('--remove_loss', type=str,
+                            choices=['None', 'sparsity', 'entropy', 'laplacian', 'truth'],
+                            default='None')
+        parser.add_argument('--interpolation', action='store_true')
+        parser.add_argument('--gaussian', action='store_true')
+        parser.add_argument('--use_partial', action='store_true')
+        parser.add_argument('--dataset_path', type=str, default='dataset')
+        parser.add_argument('--train', action='store_true')
+        parser.add_argument('--cross_val', action='store_true')
+        parser.add_argument('--save_explanation', action='store_true')
+        parser.add_argument('--threshold', type=int, default=300, help='threshold for shared explanation graph')
+        parser.add_argument('--checkpoint_path', type=str)
+        parser.add_argument('--model_logger', action='store_true', help='whether to log a model or not')
+        parser.add_argument('--api_key', type=str, help='api key for comet_ml logger')
+        parser.add_argument('--project_name', type=str, help='project name for comet_ml logger')
+
+        args = parser.parse_args()
+        
+        if args.model_logger: #TODO: fix all experiment calls for self.experiment
+            self.experiment = Experiment(
+                api_key=args.api_key,
+                project_name=args.project_name
+            )
+>>>>>>> 589dfe9e8e16182ce9fea7b1a39027ab6ff429ce
         else:
             epoch_num = args.initial_epochs
         return epoch_num
