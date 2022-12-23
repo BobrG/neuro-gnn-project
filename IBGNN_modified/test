@@ -1,4 +1,0 @@
-(Initial Train Epoch 49), test_micro=61.29, test_macro=61.25, test_auc=68.64
-(Initial Train Epoch 99), test_micro=61.29, test_macro=61.25, test_auc=70.18
-(Tuning Train Epoch 49), test_micro=64.52, test_macro=63.92, test_auc=71.49
-(Tuning Train Epoch 99), test_micro=64.52, test_macro=63.92, test_auc=71.93

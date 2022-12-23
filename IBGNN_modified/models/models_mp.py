@@ -3,12 +3,14 @@ from torch.nn import functional as F
 
 
 class IBGNN(torch.nn.Module):
-    def __init__(self, gnn, mlp, discriminator=lambda x, y: x @ y.t(), pooling='concat'):
+    def __init__(self, gnn, mlp, discriminator=None, pooling='concat'):
         super(IBGNN, self).__init__()
         self.gnn = gnn
         self.mlp = mlp
         self.pooling = pooling
-        self.discriminator = discriminator
+        # default discriminator: lambda x, y: x @ y.t() --> torch.mul ? otherwise torch.save doesn't work
+        # looks like it is not used in the code
+        # self.discriminator = discriminator
 
     def forward(self, data):
         x, edge_index, edge_attr, batch, edge_flag = data.x, data.edge_index, data.edge_attr, data.batch, data.edge_flag

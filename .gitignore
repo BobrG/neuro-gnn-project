@@ -4,7 +4,9 @@ IBGNN_modified/fig/
 __pycache__/
 datasets/
 rois/
-logs/
+*logs*/
+*.log
+seed_loop.sh
 output/
 IBGNN/fig
 *.sif

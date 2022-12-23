@@ -16,6 +16,7 @@ from sklearn.model_selection import StratifiedKFold
 from sklearn.model_selection import train_test_split
 from torch_geometric.data import DataLoader
 
+from nilearn import datasets as ds
 
 from models.build_model import build_model
 from explainer import GNNExplainer
@@ -29,6 +30,9 @@ import logger
 from datetime import datetime
 from comet_ml import Experiment
 
+import matplotlib.pyplot as plt
+from mpl_toolkits.axes_grid1 import make_axes_locatable
+
 
 class MainExplainer:
     def __init__(self, args):
@@ -38,19 +42,11 @@ class MainExplainer:
         
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         seed_everything(args.seed)  # use random seed for each run
-        
-        # model logging
-        if args.model_logger: 
-            self.experiment = Experiment(
-                api_key=args.api_key,
-                project_name=args.project_name
-            )
-            self.experiment.set_name(args.experiment_name)
-        else:
-            self.experiment = None
            
         # process logging 
-        logfile = args.logfile if args.logfile is not None else datetime.now().strftime('/home/src/neuro-gnn-project/logs/logfile_date=%d_%m_%Y_%H_%M_%S.log')
+        self.result_logdir = Path('./logs')
+        self.result_logdir.mkdir(exist_ok=True)
+        logfile = args.logfile if args.logfile is not None else datetime.now().strftime(str(self.result_logdir)+'/logfile_date=%d_%m_%Y_%H_%M_%S.log') 
         print(f'logging to {logfile}')
         self.logger = logger.get_logger(logfile, logfile, args.log_output)
         
@@ -72,8 +68,6 @@ class MainExplainer:
             'seed': args.seed
         }
         # log hyperparams
-        if self.experiment is not None:
-            self.experiment.log_parameters(self.hyper_params)
         self.logger.info(self.hyper_params)
 
         self.args = args
@@ -83,23 +77,28 @@ class MainExplainer:
                                BP="datasets/New_Node_Brodmann82.txt",
                                PPMI="datasets/New_Node_PPMI.txt",
                                PPMI_balanced="datasets/New_Node_PPMI.txt",
-                               Schiza="/home/src/neuro-gnn-project/datasets/Schiza.txt")
+                               Schiza=f"{self.args.dataset_path}/Schiza.txt")
         txt_name = dataset_mapping.get(args.dataset_name, None)
         node_labels = load_cluster_info_from_txt(txt_name)
         dataset, _, y = load_data_singleview(args, args.dataset_path, args.modality, node_labels)
-        train_set, test_set, train_y, test_y = train_test_split(dataset, y, test_size=0.2, \
-                                                                            shuffle=False, random_state=args.seed)
+        train_set, train_y = dataset, y #, train_y, test_y = train_test_split(dataset, y, test_size=0.2, \
+                                        #                                     shuffle=False, random_state=args.seed)
         node_atts = load_txt(txt_name)
         num_features = dataset[0].x.shape[1]
 
+        print('start cross validation')
+        self.fold, self.repeat = None, None
         if args.cross_val:
             # logging for nni 
             if args.enable_nni:
                 for key in self.hyper_params.keys():
                     print(key, getattr(self.args, key))
+            self.cross_val = True
             self.run_cv(self.args, train_set, train_y, node_atts, node_labels, self.device)
-            
+        self.cross_val = False
+        
         if args.train or args.checkpoint_path is not None:
+            # raise NotImplementedError
             model = build_model(args, self.device, num_features)
             train_loader = DataLoader(self.train_set, batch_size=args.train_batch_size, shuffle=False)
             test_loader = DataLoader(self.test_set, batch_size=args.test_batch_size, shuffle=False)
@@ -145,6 +144,7 @@ class MainExplainer:
         epoch_num = self.get_epoch_num(args, is_tuning)
         pbar = tqdm(total=epoch_num)
         pbar.set_description('Model ' + ('Tunning' if is_tuning else 'Initial') + ' Training')
+        best_test_auc = 0
         for i in range(epoch_num):
             loss_all = 0
             for data in train_loader:
@@ -168,37 +168,46 @@ class MainExplainer:
                              f'train_micro={(train_micro * 100):.2f}, train_macro={(train_macro * 100):.2f}, '
                              f'train_auc={(train_auc * 100):.2f}')
             if self.experiment is not None:
-                self.experiment.log_metric(f'{title} AUC', (train_auc * 100), step=i)
-                self.experiment.log_metric(f'{title} Loss', (epoch_loss), step=i)
+                # per epoch
+                self.experiment.log_metric((f'{self.fold} Fold ' if self.cross_val else '') + f'{title} AUC', (train_auc * 100), step=i, epoch=self.repeat)
+                self.experiment.log_metric((f'{self.fold} Fold ' if self.cross_val else '') + f'{title} Loss', (epoch_loss), step=i, epoch=self.repeat)
             
-            if (i + 1) % args.test_interval == 0 and test_loader is not None:
+            if ((i + 1) % args.test_interval == 0 or i + 1 == epoch_num) and test_loader is not None:
                 test_micro, test_auc, test_macro = self.eval(model, test_loader)
                 accs.append(test_micro)
                 aucs.append(test_auc)
                 macros.append(test_macro)
-                text = f'({title} Epoch {i}), test_micro={(test_micro * 100):.2f}, ' \
+                
+                if test_auc > best_test_auc:
+                    best_test_auc = test_auc
+                    torch.save(model, self.result_logdir/((f'{self.fold}_fold_' if self.cross_val else '') + f'best_model_seed{self.args.seed}.pt'))
+                
+                text = f'({title}) Test Epoch {i}, test_micro={(test_micro * 100):.2f}, ' \
                        f'test_macro={(test_macro * 100):.2f}, test_auc={(test_auc * 100):.2f}\n'
                 self.logger.info(text)
                 
                 if self.experiment is not None:
-                    self.experiment.log_metric(f'{title.split(" ")[0]} Test AUC', (test_auc * 100), step=i)
+                    # per epoch
+                    self.experiment.log_metric((f'{self.fold} Fold ' if self.cross_val else '') + f'{title.split(" ")[0]} Test AUC', (test_auc * 100), step=i, epoch=self.repeat)
 
             if args.enable_nni:
                 nni.report_intermediate_result(aucs[-1])
                 
             pbar.update(1)
 
-        # sort ???
-        # accs, aucs, macros = numpy.sort(numpy.array(accs)), numpy.sort(numpy.array(aucs)), \
-        #                      numpy.sort(numpy.array(macros))
         pbar.close()
-                          
-        # if verbose:
-        name = ('Tunned' if is_tuning else 'Initial') + ' Model'
-        print(f'( {name} Last Epoch) | test_micro(acc)={(test_micro * 100):.2f}, ' + \
-                f'test_macro={(test_macro * 100):.2f}, test_auc={(test_auc * 100):.2f}')
 
-        return numpy.array(accs).mean(), numpy.array(aucs).mean(), numpy.array(macros).mean()
+        torch.save(model, self.result_logdir/((f'{self.fold}_fold_' if self.cross_val else '') + f'lastepoch_model_seed{self.args.seed}.pt'))
+        last_epoch_acc, last_epoch_auc, last_epoch_macro = accs[-1], aucs[-1], macros[-1]
+        best_acc, best_auc, best_macro = numpy.sort(numpy.array(accs))[-1], numpy.sort(numpy.array(aucs))[-1], \
+                                         numpy.sort(numpy.array(macros))[-1]
+                                         
+        name = ('Tunned' if is_tuning else 'Initial') + ' Model'
+        self.logger.info(f'({name} Best Epoch) | test_micro(acc)={(best_acc * 100):.2f}, ' + \
+                        f'test_macro={(best_macro * 100):.2f}, test_auc={(best_auc * 100):.2f}')
+        self.experiment.log_metric(f'{title.split(" ")[0]} Best Test AUC on Folds', (best_auc * 100), step=self.fold, epoch=self.repeat)
+
+        return last_epoch_acc, last_epoch_auc, last_epoch_macro#, (best_acc, best_auc, best_macro))
 
     @torch.no_grad()
     def eval(self, model, loader, test_loader: Optional[DataLoader] = None): # -> (float, float):
@@ -237,21 +246,61 @@ class MainExplainer:
         # train explainer mask
         explainer = GNNExplainer(model, epochs=args.explainer_epochs, return_type='log_prob', labels=node_labels,
                                  remove_loss=[args.remove_loss])
-        node_feat_mask, edge_mask = explainer.explainer_train(train_iterator, self.device, args, self.logger)
+        node_feat_mask, edge_mask = explainer.explainer_train(train_iterator, self.device, args, self.logger, self.experiment, fold=self.fold)
+        
+        # log mask
+        sz = int(np.sqrt(edge_mask.shape[0]))
+        general_edge_mask = edge_mask.view(sz, sz).detach().cpu().numpy()
+        for i in range(len(general_edge_mask)):
+            general_edge_mask[i][i] = 0.0
+        plt.ioff() 
+        fig, ax = plt.subplots(1, 1, figsize=(12, 12))
+        im1 = ax.imshow(general_edge_mask)
+        ax.set_title('general edge mask')
+        divider = make_axes_locatable(ax)
+        cax = divider.append_axes('right', size='5%', pad=0.05)
+        fig.colorbar(im1, cax=cax, orientation='vertical');
+        self.experiment.log_figure(f'Explainer Mask', fig, step=self.fold)
+        if self.args.dataset_name == 'Schiza':
+            atlas = ds.fetch_atlas_msdl()
+            labels = atlas['labels']
+            ranking = {}#np.zeros((len(general_edge_mask)))
+            for i, row in enumerate(general_edge_mask):
+                ranking[labels[i]] = sum(abs(row))
+            fig, ax = plt.subplots(1, 1, figsize=(12, 12))
+            # Set the x-axis limit
+            ax.set_xlim(-1,40)
+            # Change of fontsize and angle of xticklabels
+            plt.setp(ax.get_xticklabels(), fontsize=10, rotation='vertical')
+
+            hist = ax.bar(ranking.keys(), ranking.values())
+            self.experiment.log_figure('Atlas Labels Ranking', fig, step=self.fold)
+        
         # Tuning: used explainer masked loader to train the initial model again
         masked_train_loader = explainer.mask_dataloader(node_feat_mask, edge_mask, train_iterator, args, node_atts,
                                                         self.device, batch_size=args.train_batch_size)
         masked_test_loader = explainer.mask_dataloader(node_feat_mask, edge_mask, test_iterator, args, node_atts,
                                                        self.device, batch_size=args.test_batch_size) if test_set is not None else None
 
-        self.train_and_evaluate(explainer.model, masked_train_loader, masked_test_loader, optimizer,
-                                self.device, args, is_tuning=True)
+        # here explainer's perfomance will be logged per epoch train/test
+        if args.mask_tunning:
+            self.train_and_evaluate(explainer.model, masked_train_loader, masked_test_loader, optimizer,
+                                    self.device, args, is_tuning=True)
+        elif args.mask_training:
+            num_features = train_set[0].x.shape[1]
+            model = build_model(args, self.device, num_features)
+            self.train_and_evaluate(explainer.model, masked_train_loader, masked_test_loader, optimizer,
+                                    self.device, args, is_tuning=True)
+        else:
+            raise NotImplementedError
+        
         if test_set is not None:
             explainer_test_micro, explainer_test_auc, explainer_test_macro = self.eval(explainer.model,
                                                                                        masked_test_loader)
             result_str = f'(Tuning Performance Last Epoch) | explainer_test_micro={(explainer_test_micro * 100):.2f}, ' + \
                          f'explainer_test_macro={(explainer_test_macro * 100):.2f}, ' + \
                          f'explainer_test_auc={(explainer_test_auc * 100):.2f}'
+            result_str = (f'{self.fold} Fold ' if self.cross_val else '') + result_str
             self.logger.info(result_str)
             if verbose:
                 print(result_str)
@@ -265,6 +314,24 @@ class MainExplainer:
             ret += [masked_train_loader, masked_test_loader]
         return ret
     
+    def _data_split(self, dataset, train_index, test_index, dropout_rate=None, shallow=None):
+        # authors datasplitting :/
+        train_binary, test_binary = numpy.zeros(len(dataset), dtype=int), numpy.zeros(len(dataset), dtype=int)
+        train_binary[train_index] = 1
+        test_binary[test_index] = 1
+        train_set: MaskableList[Data]
+        train_set, test_set = dataset[train_binary], dataset[test_binary]
+        # train_y, test_y = y[train_index], y[test_index]
+        # splitting done
+        
+        if dropout_rate is not None and dropout_rate > 0:
+            train_set, _ = self.dropout_samples(train_set, dropout_rate)
+            
+        if shallow == 'diff_matrix':
+            raise NotImplemented
+
+        return train_set, test_set
+    
     def run_cv(self, args, dataset_list, y, node_atts, node_labels, device):
         dataset = MaskableList(dataset_list)
         
@@ -273,32 +340,31 @@ class MainExplainer:
         accs, aucs, macros = [], [], []
         exp_accs, exp_aucs, exp_macros = [], [], []
         
-        for _ in range(args.repeat):
-            seed_everything(args.seed)  # use random seed for each run
+        for self.repeat in range(args.repeat):
+            
+            # model logging
+            if args.model_logger: 
+                self.experiment = Experiment(
+                    api_key=self.args.api_key,
+                    project_name=self.args.project_name
+                )
+                self.experiment.set_name(self.args.experiment_name + '_repeat_{self.repeat}')
+                if self.experiment is not None:
+                    self.experiment.log_parameters(self.hyper_params)
+            else:
+                self.experiment = None
             
             skf = StratifiedKFold(n_splits=args.k_fold_splits, shuffle=True)
-            fold = 0
-            for train_index, test_index in skf.split(dataset, y):
-                self.logger.info(f'Fold #{fold + 1}')
+            
+            for self.fold, (train_index, test_index) in enumerate(skf.split(dataset, y)):
+                self.logger.info(f'\n################# Fold #{self.fold + 1} #################')
+                print(f'\n################# Fold #{self.fold + 1} #################')
+                
                 model = build_model(args, device, num_features)
                 optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
                 
-                # authors datasplitting :/
-                train_binary, test_binary = numpy.zeros(len(dataset), dtype=int), numpy.zeros(len(dataset), dtype=int)
-                train_binary[train_index] = 1
-                test_binary[test_index] = 1
-                train_set: MaskableList[Data]
-                train_set, test_set = dataset[train_binary], dataset[test_binary]
-                train_y, test_y = y[train_index], y[test_index]
-
-                if args.dropout_rate > 0:
-                    train_set, train_y = self.dropout_samples(train_set, train_y, args.dropout_rate)
-
-                if args.shallow == 'diff_matrix':
-                    diff_matrix = DiffMatrix(0.2).compute(train_set, y)
-                    _, train_set = diff_matrix.apply(train_set, args, train_y)
-                    _, test_set = diff_matrix.apply(test_set, args, test_y)
-
+                train_set, test_set = self._data_split(dataset, train_index, test_index, args.dropout_rate, args.shallow)
+                
                 train_loader = DataLoader(train_set, batch_size=args.train_batch_size, shuffle=False)
                 test_loader = DataLoader(test_set, batch_size=args.test_batch_size, shuffle=False)
 
@@ -307,11 +373,11 @@ class MainExplainer:
                                                                            optimizer, device, args, is_tuning=False)
                 self.logger.info(f'(Initial Performance Last Epoch) | test_micro={(test_micro * 100):.2f}, '
                                     f'test_macro={(test_macro * 100):.2f}, test_auc={(test_auc * 100):.2f}')
-
+                
+                # from last epoch for test fold
                 accs.append(test_micro)
                 aucs.append(test_auc)
                 macros.append(test_macro)
-                fold += 1
 
                 if args.explain:
                     explainer_test_micro, explainer_test_auc, explainer_test_macro = \
@@ -319,20 +385,22 @@ class MainExplainer:
                     exp_accs.append(explainer_test_micro)
                     exp_aucs.append(explainer_test_auc)
                     exp_macros.append(explainer_test_macro)
-
-        result_str = f'(K Fold Initial)| avg_acc={(numpy.mean(accs) * 100):.2f} +- {(numpy.std(accs) * 100): .2f}, ' \
+                    
+        
+        result_str = f'\n(K Fold Initial)| avg_acc={(numpy.mean(accs) * 100):.2f} +- {(numpy.std(accs) * 100): .2f}, ' \
                      f'avg_auc={(numpy.mean(aucs) * 100):.2f} +- {numpy.std(aucs) * 100:.2f}, ' \
-                     f'avg_macro={(numpy.mean(macros) * 100):.2f} +- {numpy.std(macros) * 100:.2f}\n'
+                     f'avg_macro={(numpy.mean(macros) * 100):.2f} +- {numpy.std(macros) * 100:.2f}\n, '\
+                     f'FYI: averaged across {self.fold+1} Folds, each metric computed on Test Fold after {self.get_epoch_num(is_tuning=False)} training epochs.'
         self.logger.info(result_str)
         if args.explain:
-            result_str += f'(K Fold Tuning) | avg_acc={(numpy.mean(exp_accs) * 100):.2f} +- {(numpy.std(exp_accs) * 100): .2f}, ' \
+            result_str += f'\n(K Fold Tuning) | avg_acc={(numpy.mean(exp_accs) * 100):.2f} +- {(numpy.std(exp_accs) * 100): .2f}, ' \
                           f'avg_auc={(numpy.mean(exp_aucs) * 100):.2f} +- {numpy.std(exp_aucs) * 100:.2f}' \
-                          f'avg_macro={(numpy.mean(exp_macros) * 100):.2f} +- {numpy.std(exp_macros) * 100:.2f}'
+                          f'avg_macro={(numpy.mean(exp_macros) * 100):.2f} +- {numpy.std(exp_macros) * 100:.2f}, ' \
+                          f'FYI: averaged across {self.fold+1} Folds, each metric computed on Test Fold for masked model after {self.get_epoch_num(is_tuning=True)} training epochs.'
             self.logger.info(result_str)
 
-        result_logdir = Path('./logs')
-        result_logdir.mkdir(exist_ok=True)
-        with open(result_logdir/'result.log', 'a') as f:
+
+        with open(self.result_logdir/'result.log', 'a') as f:
            # write all input arguments to f
            input_arguments: List[str] = sys.argv
            f.write(f'{input_arguments}\n')
@@ -348,18 +416,19 @@ class MainExplainer:
             epoch_num = args.initial_epochs
         return epoch_num
 
-    def dropout_samples(self, train_set: List[Data], train_y: Tensor, dropout_rate) -> Tuple[List[Data], Tensor]:
+    def dropout_samples(self, train_set: List[Data], dropout_rate) -> Tuple[List[Data], Tensor]:
         # randomly shuffle the list of data and train_y together
         indices = torch.randperm(len(train_set))
         train_set = [train_set[i] for i in indices]
-        train_y = train_y[indices]
+        # train_y = train_y[indices]
 
         # dropout the data according to the dropout rate
         dropout_num = int(dropout_rate * len(train_set))
         train_set = train_set[dropout_num:]
-        train_y = train_y[dropout_num:]
+        # train_y = train_y[dropout_num:]
 
-        return train_set, train_y
+        return train_set
+        # return train_set, train_y
 
 
 def count_degree(data: numpy.ndarray):  # data: (sample, node, node)
@@ -380,7 +449,7 @@ if __name__ == '__main__':
     parser.add_argument('--initial_epochs', type=int, default=100)
     parser.add_argument('--explainer_epochs', type=int, default=100)
     parser.add_argument('--tuning_epochs', type=int, default=100)
-    parser.add_argument('--test_interval', type=int, default=20)
+    parser.add_argument('--test_interval', type=int, default=10)
     parser.add_argument('--seed', type=int, default=112078)
     parser.add_argument('--save_result', type=str, default='test')
     parser.add_argument('--node_features', type=str,
@@ -428,6 +497,10 @@ if __name__ == '__main__':
     parser.add_argument('--api_key', type=str, help='api key for comet_ml logger')
     parser.add_argument('--project_name', type=str, help='project name for comet_ml logger')
     parser.add_argument('--experiment_name', type=str, help='experiment name for comet_ml logger')
+    
+    parser.add_argument('--mask_training', action='store_true', help='Re-init model and train with mask from the begging')
+    parser.add_argument('--mask_tunning', action='store_true', help='Tune pre-trained model with estimated mask')
+    
 
     args = parser.parse_args()
 

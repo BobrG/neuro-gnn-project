@@ -201,7 +201,7 @@ def load_data_singleview(args, path, modality: str, node_labels, dataset_name=No
         a1 = torch.from_numpy(a1_transformed)
 
     bin_edges, data_list = build_dataset(a1, y, args=args) if args is not None \
-                            else build_dataset(a1, y, node_features, dataset_name, modality)
+                            else build_dataset(a1, y, node_labels, dataset_name, modality)
 
     return data_list, bin_edges, y
 
@@ -220,7 +220,7 @@ def build_dataset(a1, y, node_features=None, dataset_name=None, modality=None, a
         single_graph_edge_weights = [weight for weight in edge_attr.numpy()]
         all_edge_weights_list.extend(single_graph_edge_weights)
     # edge weights distribution
-    hist, bin_edges = np.histogram(all_edge_weights_list, bins=10)
+    _, bin_edges = np.histogram(all_edge_weights_list, bins=10)
     return bin_edges, data_list
 
 
