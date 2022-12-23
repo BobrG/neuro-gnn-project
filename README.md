@@ -4,6 +4,20 @@
 and check out it ability to extract biomarkers used for classification of Schizophrenia ([COBRE dataset](http://fcon_1000.projects.nitrc.org/indi/retro/cobre.html)).
 Also, the experiments with non-learnable (baseline) methods of DL models interpretation were conducted on sMRI data ([ADNI open-source dataset](https://adni.loni.usc.edu/)).
 
+* [Post Course Project](#post-course-project)
+  * [IBGNN analysis](#ibgnn-analysis)
+  * [Literature review](#literature-review)
+* [Course Project](#course-project)
+
+### Post Course Project
+
+#### IBGNN Analysis
+* [Experiment 1](#experiment-1): NNI AutoML for COBRE dataset.
+* [Experiment 2](#experiment-2): Stability check with cross-validation (stratified, 7 folds) on COBRE dataset for 5 different random seed. 
+* [Experiment 3](#experiment-3): Repetition for cross-validation (stratified, 7 folds) on COBRE dataset.
+
+
+### Course project
 
 Table of contents:
 * [Baseline models results](https://github.com/BobrG/neuro-gnn-project/blob/master/baseline.ipynb)
