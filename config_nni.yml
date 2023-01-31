@@ -1,12 +1,16 @@
 searchSpaceFile: gnn_search_space.json
-trialCommand: python3 main_explainer.py --train --explain --dataset_path=/home/src/datasets/ --dataset_name=Schiza
-experimentWorkingDirectory: ./IBGNN/
-trialGpuNumber: 0
-trialConcurrency: 4
-maxTrialNumber: 20
+trialCommand: python3 main_explainer.py --enable_nni --cross_val --explain --dataset_path=/home/src/datasets/ --dataset_name=Schiza 
+trialCodeDirectory: /home/src/IBGNN_modified/
+experimentWorkingDirectory: /home/src/logs
+trialGpuNumber: 1
+trialConcurrency: 6
+maxExperimentDuration: 18h
+maxTrialNumber: 5000
 tuner:
   name: TPE
   classArgs:
     optimize_mode: maximize
 trainingService:
   platform: local
+  maxTrialNumberPerGpu: 100
+  useActiveGpu: True
